@@ -6,8 +6,15 @@ Custom implemented load balancer and api gateway that caches results, with verti
 
 ## Usage
 
-Using this custom loadbalancing application, similar to many of the well known cloud services such as AWS API Gateway which provided vertical and horizontal scalability
-this custom backend server introduces a custom implementation with increases customization.
+Using this custom loadbalancing application, similar to many of the well known cloud services such as AWS API Gateway which provided vertical and horizontal scalability this custom backend server introduces a custom implementation with increases customization.
+
+``
+npm install
+``
+
+``
+npm start
+``
 
 ## How it works
 
