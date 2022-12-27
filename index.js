@@ -7,14 +7,20 @@ const numberOfCPUCores = require('os').cpus().length;
 let currentCount = 0;
 let aboveThreshold = currentCount>2 ? true : false;
 const CACHED_THRESHOLD = 1000;
-let cachedData = [];
+let cachedData = {};
 
 function updateWorkers(){
+    let tmpObject = {};
     Object.values(cluster.workers).forEach((worker)=>{
         worker.on('message',msg=>{
-           cachedData.push(msg.tmpData);
+            if(msg.cachedData){
+                Object.entries(msg.cachedData).map((entry)=>{
+                    cachedData[entry[0]] = entry[1];
+                    tmpObject[entry[0]] = entry[1];
+                })
+            }
         })
-        worker.send({cachedData})
+        worker.send({cachedData:tmpObject});
     })
 }
 
@@ -42,15 +48,17 @@ function sleep(time){
 }
 
 function findData(tmpData,query){
-    let data = tmpData.filter((data)=>data.query===query)
-    return data.length>0 ? data[0] : null;
+    // let data = tmpData.filter((data)=>data.query===query)
+    // return data.length>0 ? data[0] : null;
+    let data = tmpData[query] ?? null;
+    return data;
 }
 
 function cachedDataHandler(inputData){
-    if(cachedData.length>CACHED_THRESHOLD){
-        cachedData = cachedData.splice(cachedData.length/2);
-    }
-    cachedData.push(inputData);
+    // if(cachedData.length>CACHED_THRESHOLD){
+    //     cachedData = cachedData.splice(cachedData.length/2);
+    // }
+    cachedData[inputData.query] = (inputData);
     /*
         inputData = {
             query:String (GET,POST,PUT)
@@ -63,7 +71,9 @@ function cachedDataHandler(inputData){
 function endpointFunction(PORT){
     // let tmpData = [];
     process.on('message',msg=>{
-        cachedData = [...cachedData,...msg.cachedData];
+        Object.entries(msg.cachedData).map((entry)=>{
+            cachedData[entry[0]] = entry[1];
+        })
         // console.log(cachedData);
     })
     app.get('/getData',(req,res)=>{
@@ -73,7 +83,7 @@ function endpointFunction(PORT){
             process.send({tmpData:cachedData});
             res.send(data.data);
         }else{
-            //get data from DB
+            sleep(2000);//get data from DB
             cachedDataHandler({
                 query:'getData',
                 params:'',
@@ -81,6 +91,8 @@ function endpointFunction(PORT){
             });
             res.send('Hi');
         }
+        // sleep(2000);
+        // res.send('Hi');
     })
     app.get('/getSecond',(req,res)=>{
         currentCount = currentCount+1;
