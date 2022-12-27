@@ -38,8 +38,7 @@ Tested using the autocannon package. Can test out from ``/test`` folder, customi
 |Custom Loadbalancer with DB simulation*|2494.41 |558 |127227.2 |
 |Normal Node.js Application with DB simulation*|7044.34|0.34 |76|
 
-With DB simulation, the custom loadbalancer outperforms a normal node.js server application with more than 1000 times greater number of requests per second it can
-handle, and 1000 times more throughput, and 35% of the latency to fulfill the request. 
+With DB simulation, the custom loadbalancer outperforms a normal node.js server application by being able to handle more than 1000 times more requests per second, 1000 times more throughput, alongside fulfilling the request with 35% of the latency time. 
 
 ## License 
 MIT
