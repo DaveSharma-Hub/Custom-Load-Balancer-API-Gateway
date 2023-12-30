@@ -30,24 +30,31 @@ function updateWorkers(){
 function runLoadBalancer(PORT){
     if(cluster.isMaster){
         console.log(`Parent process ${process.pid} running`);
+        const workers = [];
+
+        const broadCastToAllWorker = (msg) => {
+            for(let worker of workers){
+                worker.send(msg);
+            }
+        }
+
         for(let i=0;i<numberOfCPUCores;i++){
-            cluster.fork();
+            const worker = cluster.fork();
+            worker.on('message', msg=>{
+                // console.log(`Master message: ${msg}`);
+                broadCastToAllWorker(msg);
+            });
+            workers.push(worker);
         }
         // updateWorkers();
         // setInterval(updateWorkers, 10000);
         cluster.on('exit', (worker, code, signal) => {
             console.log(`Worker ${worker.process.pid} died`);
         });
-
-        cluster.on('message', msg=>{
-            Object.values(cluster.workers).forEach((worker)=>{
-                worker.send(msg);
-            });
-        })
     }
     else{
         console.log(`Child process ${process.pid}`);
-        endpointFunction(PORT);
+        endpointFunction(PORT, process);
     }
 }
 
@@ -77,11 +84,12 @@ function cachedDataHandler(inputData){
     */
 }
 
-function endpointFunction(PORT){
+function endpointFunction(PORT, process){
     // let tmpData = [];
     process.on('message',msg=>{
-        Object.entries(msg.cachedData).map((entry)=>{
-            cacheClient.getItem(entry[0],()=>{
+        // console.log(`Recieved process: ${process.pid}`);
+        Object.entries(msg).map(async(entry)=>{
+            await cacheClient.getItem(entry[0],()=>{
                 return entry[1];
             });
             // cachedData[entry[0]] = entry[1];
@@ -97,18 +105,20 @@ function endpointFunction(PORT){
             return {
                 query:'getData',
                 params:'',
-                data:'Hi'
+                data:'Hello'
             };
         });
 
+        // console.log(wasCached);
         if(!wasCached){
             process.send({
                 key:result.query,
                 data:result
             });
         }
-        console.log(result);
-        res.send('Hi');
+
+        console.log(`Using process: ${process.pid}`);
+        res.send(result.data);
 
         // if(data){
         //     process.send({tmpData:cachedData});

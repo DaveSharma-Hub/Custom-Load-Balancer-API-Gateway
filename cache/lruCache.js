@@ -1,9 +1,10 @@
 class Node{
-    constructor(item){
+    constructor(key, item){
         this.payload = item;
         this.time = Date.now();
         this.prev = null;
         this.next = null;
+        this.key = key;
     }
 
     setPayload(item){
@@ -28,6 +29,10 @@ class Node{
     
     getPayload(){
         return this.payload;
+    }
+
+    getKey(){
+        return this.key;
     }
 }
 
@@ -60,13 +65,18 @@ class LRUCache{
         if(this.mapHasKey(key)){
             const node = this.map[key];
             if(node !== this.current){
-                this.current.setNext(node);
                 const prevNode = node.getPrev();
+                const nextNode = node.getNext();
                 if(prevNode){
-                    prevNode.setNext(node.getNext());
-                }else{
-                    this.head = node.getNext();
+                    prevNode.setNext(nextNode);
                 }
+                if(nextNode){
+                    nextNode.setPrev(prevNode);
+                }
+                if(this.head === node){
+                    this.head = nextNode;
+                }
+                this.current.setNext(node);
                 node.setPrev(this.current);
                 node.setNext(null);
                 this.current = this.current.getNext();
@@ -74,7 +84,7 @@ class LRUCache{
             return node.getPayload();
         }else{
             let item = await this.promiseWrapper(fallbackFn);
-            const newNode = new Node(item);
+            const newNode = new Node(key, item);
             if(this.size < this.maxSize){
                 if(this.size === 0){
                     this.head = newNode;
@@ -82,22 +92,34 @@ class LRUCache{
                 }else{
                     this.current.setNext(newNode);
                     newNode.setPrev(this.current);
-                    this.current = this.current.getNext();
+                    this.current = newNode;
                 }
                 this.map[key] = newNode;
                 this.size++;
             }else{
                 this.current.setNext(newNode);
                 newNode.setPrev(this.current);
-                const removedNode = this.head;
-            
-                this.head = this.head.getNext();
                 this.current = this.current.getNext();
+
+                const removedNode = this.head;
+                
+                this.head = this.head.getNext();
+                this.head.setPrev(null);
 
                 removedNode.setNext(null);
                 removedNode.setPrev(null);
+
+                delete this.map[removedNode.getKey()];
             }
             return item;
+        }
+    }
+    
+    print(){
+        let node = this.head;
+        while(node!==null){
+            console.log(node);
+            node = node.getNext();
         }
     }
 }

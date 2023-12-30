@@ -38,7 +38,7 @@ Tested using the autocannon package. Can test out from ``/test`` folder, customi
 |Custom Loadbalancer with DB simulation*|2494.41 |558 |127227.2 |
 |Normal Node.js Application with DB simulation*|7044.34|0.34 |76|
 |-|-|-|-|
-|Custom Loadbalancer + LRU Cache with DB simulation*| 2232.17 |1744.1 |397568 |
+|Custom Loadbalancer + LRU Cache with DB simulation*| 2280.4 |1427.9 |329817.6 |
 |-|-|-|-|
 
 

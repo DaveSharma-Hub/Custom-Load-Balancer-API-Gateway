@@ -7,18 +7,19 @@ class CacheClient{
 
     functionWrapper(fnCb){
         let closureCalled = false;
-        return {
-            fn:async () => {
-                await fnCb();
+        return async () => {
                 closureCalled = true;
-            },
-            closureCalled:closureCalled
-        }
+                return {
+                    result:await fnCb(),
+                    closureCalled: closureCalled
+                }
+            }
     }
 
     async getItem(key,fnCb){
-        const { fn, closureCalled } = this.functionWrapper(fnCb);
-        const result = await this.cache.getItem(key, fn);
+        const fn = this.functionWrapper(fnCb);
+        const { result, closureCalled } = await this.cache.getItem(key, fn);
+        // console.log(`closureCalled ${closureCalled}`);
         return {
             result:result,
             wasCached: !closureCalled
