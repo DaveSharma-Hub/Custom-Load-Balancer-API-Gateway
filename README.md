@@ -27,7 +27,7 @@ data is stored for further improvements (not needing to query any database every
 
 
 ## Comparison
-Tested using the autocannon package. Can test out from ``/test`` folder, customizing settings and running ``npm start``
+Tested using the autocannon package. Can test out from ``/test`` folder, customizing settings and running ``npm test``
 *DB simulated with 2000ms(2sec) sleep to simulate time to query DB and recieve the data.
 
 | Type | Latency, ms (smaller better) | Requests, req/sec (higher better) | Throughput (Higher better) |
@@ -37,6 +37,10 @@ Tested using the autocannon package. Can test out from ``/test`` folder, customi
 |-|-|-|-|
 |Custom Loadbalancer with DB simulation*|2494.41 |558 |127227.2 |
 |Normal Node.js Application with DB simulation*|7044.34|0.34 |76|
+|-|-|-|-|
+|Custom Loadbalancer + LRU Cache with DB simulation*| 2232.17 |1744.1 |397568 |
+|-|-|-|-|
+
 
 With DB simulation, the custom loadbalancer outperforms a normal node.js server application by being able to handle more than 1000 times more requests per second, 1000 times more throughput, alongside fulfilling the request with 35% of the latency time. 
 

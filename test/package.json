@@ -4,8 +4,7 @@
   "description": "",
   "main": "benchmark.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon benchmark.js"
+    "test": "nodemon benchmark.js"
   },
   "keywords": [],
   "author": "",

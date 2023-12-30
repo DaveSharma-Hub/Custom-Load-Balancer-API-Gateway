@@ -2,12 +2,15 @@ const cors = require('cors');
 const app = require('express')();
 const cluster = require('cluster');
 const endpoint = require('./apiEndpoints');
+const { CacheClient } = require('./cache/cache');
 const numberOfCPUCores = require('os').cpus().length;
 // const PORT = 8000;
 let currentCount = 0;
 let aboveThreshold = currentCount>2 ? true : false;
 const CACHED_THRESHOLD = 1000;
 let cachedData = {};
+const cacheClient = new CacheClient({maxSize:1000});
+
 
 function updateWorkers(){
     let tmpObject = {};
@@ -27,14 +30,20 @@ function updateWorkers(){
 function runLoadBalancer(PORT){
     if(cluster.isMaster){
         console.log(`Parent process ${process.pid} running`);
-        for(let i=0;i<numberOfCPUCores;i=i+1){
+        for(let i=0;i<numberOfCPUCores;i++){
             cluster.fork();
         }
-        updateWorkers();
-        setInterval(updateWorkers, 10000);
+        // updateWorkers();
+        // setInterval(updateWorkers, 10000);
         cluster.on('exit', (worker, code, signal) => {
             console.log(`Worker ${worker.process.pid} died`);
         });
+
+        cluster.on('message', msg=>{
+            Object.values(cluster.workers).forEach((worker)=>{
+                worker.send(msg);
+            });
+        })
     }
     else{
         console.log(`Child process ${process.pid}`);
@@ -72,25 +81,47 @@ function endpointFunction(PORT){
     // let tmpData = [];
     process.on('message',msg=>{
         Object.entries(msg.cachedData).map((entry)=>{
-            cachedData[entry[0]] = entry[1];
-        })
+            cacheClient.getItem(entry[0],()=>{
+                return entry[1];
+            });
+            // cachedData[entry[0]] = entry[1];
+        });
         // console.log(cachedData);
     })
-    app.get('/getData',(req,res)=>{
-        const data = findData(cachedData,'getData');
+    app.get('/getData',async (req,res)=>{
+        // const data = findData(cachedData,'getData');
         // console.log(data,cachedData);
-        if(data){
-            process.send({tmpData:cachedData});
-            res.send(data.data);
-        }else{
-            sleep(2000);//get data from DB
-            cachedDataHandler({
+
+        const { result, wasCached } = await cacheClient.getItem('getData',()=>{
+            sleep(2000);
+            return {
                 query:'getData',
                 params:'',
                 data:'Hi'
+            };
+        });
+
+        if(!wasCached){
+            process.send({
+                key:result.query,
+                data:result
             });
-            res.send('Hi');
         }
+        console.log(result);
+        res.send('Hi');
+
+        // if(data){
+        //     process.send({tmpData:cachedData});
+        //     res.send(data.data);
+        // }else{
+        //     sleep(2000);//get data from DB
+        //     cachedDataHandler({
+        //         query:'getData',
+        //         params:'',
+        //         data:'Hi'
+        //     });
+        //     res.send('Hi');
+        // }
         // sleep(2000);
         // res.send('Hi');
     })
