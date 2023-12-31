@@ -12,7 +12,13 @@ async function loadtest(connections, duration, url){
     console.log(result)
 }
 
-loadtest(5000,10,"http://localhost:8000/getData")
+// loadtest(5000,10,"http://localhost:8000/getData")
+// .then((response)=>{})
+// .catch((error)=>{
+//     console.log(error)
+// })
+
+loadtest(10000,10,["http://localhost:8000/getSecond","http://localhost:8000/getData"])
 .then((response)=>{})
 .catch((error)=>{
     console.log(error)

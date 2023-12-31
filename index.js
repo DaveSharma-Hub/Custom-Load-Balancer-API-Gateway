@@ -135,13 +135,44 @@ function endpointFunction(PORT, process){
         // sleep(2000);
         // res.send('Hi');
     })
-    app.get('/getSecond',(req,res)=>{
-        currentCount = currentCount+1;
-        res.send('Hello');
+    app.get('/getSecond',async(req,res)=>{
+        
+        const { result, wasCached } = await cacheClient.getItem('getSecond',()=>{
+            sleep(2000);
+            return {
+                query:'getSecond',
+                params:'',
+                data:2
+            };
+        });
+
+        if(!wasCached){
+            process.send({
+                key:result.query,
+                data:result
+            });
+        }
+
+        res.send(JSON.stringify(result.data));
     })
-    app.get('/getThird',(req,res)=>{
-        currentCount = currentCount+1;
-        res.send('Bye');
+    app.get('/getThird',async(req,res)=>{
+        const { result, wasCached } = await cacheClient.getItem('getThird',()=>{
+            sleep(2000);
+            return {
+                query:'getThird',
+                params:'',
+                data:'BYE'
+            };
+        });
+
+        if(!wasCached){
+            process.send({
+                key:result.query,
+                data:result
+            });
+        }
+
+        res.send(result.data);
     })
     app.use(cors());
 
